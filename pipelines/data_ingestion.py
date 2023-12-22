@@ -2,7 +2,18 @@ from os import environ
 
 import boto3
 
-from constants import DEFAULT_DATA_FOLDER,DEFAULT_DATA_OBJECT_NAME,DEFAULT_DATA_FILE_NAME
+DEFAULT_DATA_OBJECT_NAME = 'live-data.csv'
+
+DEFAULT_DATA_FOLDER = './data'
+DEFAULT_DATA_FILE_NAME = 'data.csv'
+
+DEFAULT_TRAIN_DATA_FILE_NAME = 'train-data.pkl'
+DEFAULT_TRAIN_LABELS_FILE = 'train-labels.pkl'
+
+DEFAULT_TEST_DATA_FILE_NAME = 'test-data.pkl'
+DEFAULT_TEST_LABELS_FILE = 'test-labels.pkl'
+
+DEFAULT_MODEL_FILE_NAME = 'model.joblib'
 
 # Downloads data data_object_name from AWS S3 bucket and leaves it in data_folder=DEFAULT_DATA_FOLDER
 def ingest_data(data_object_name='', data_folder=DEFAULT_DATA_FOLDER, data_file=DEFAULT_DATA_FILE_NAME):

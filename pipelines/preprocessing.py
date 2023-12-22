@@ -14,9 +14,18 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LinearRegression
 
-from constants import DEFAULT_DATA_FILE_NAME, DEFAULT_DATA_FOLDER, DEFAULT_TEST_DATA_FILE_NAME, DEFAULT_TRAIN_DATA_FILE_NAME, DEFAULT_TRAIN_LABELS_FILE
-from constants import DEFAULT_TEST_LABELS_FILE
+DEFAULT_DATA_OBJECT_NAME = 'live-data.csv'
 
+DEFAULT_DATA_FOLDER = './data'
+DEFAULT_DATA_FILE_NAME = 'data.csv'
+
+DEFAULT_TRAIN_DATA_FILE_NAME = 'train-data.pkl'
+DEFAULT_TRAIN_LABELS_FILE = 'train-labels.pkl'
+
+DEFAULT_TEST_DATA_FILE_NAME = 'test-data.pkl'
+DEFAULT_TEST_LABELS_FILE = 'test-labels.pkl'
+
+DEFAULT_MODEL_FILE_NAME = 'model.joblib'
 
 def preprocess(data_folder=DEFAULT_DATA_FOLDER,data_file=DEFAULT_DATA_FILE_NAME):
     print('>>> Preprocessing data')
