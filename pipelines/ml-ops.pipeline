@@ -17,7 +17,7 @@
               "dependencies": [],
               "include_subdirectories": false,
               "outputs": [
-                "./data/data.csv"
+                "/data/data.csv"
               ],
               "env_vars": [],
               "kubernetes_pod_annotations": [],
@@ -38,7 +38,7 @@
             "ui_data": {
               "label": "data_ingestion.py",
               "image": "/notebook/pipelines-example/ml-ops/static/elyra/python.svg",
-              "x_pos": 49,
+              "x_pos": 70,
               "y_pos": 50,
               "description": "Run Python script"
             }
@@ -81,8 +81,8 @@
               "dependencies": [],
               "include_subdirectories": false,
               "outputs": [
-                "./data/train-data.pkl",
-                "./data/train-labels.pkl"
+                "/data/train-data.pkl",
+                "/data/train-labels.pkl"
               ],
               "env_vars": [],
               "kubernetes_pod_annotations": [],
@@ -153,7 +153,7 @@
               "dependencies": [],
               "include_subdirectories": false,
               "outputs": [
-                "./data/model.joblib"
+                "/data/model.joblib"
               ],
               "env_vars": [],
               "kubernetes_pod_annotations": [],
