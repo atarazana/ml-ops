@@ -1,0 +1,346 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ml.fullname" . }}-bk
+  labels:
+    app: {{ include "ml.fullname" . }}-bk
+    app.kubernetes.io/component: {{ include "ml.fullname" . }}-bk
+    app.kubernetes.io/part-of: ml-app
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: 3.11-ubi8
+  {{- include "ml.labels" . | nindent 4 }}
+  annotations:
+    app.openshift.io/vcs-ref: {{ quote .Values.ml.bk.vcs.ref }}
+    app.openshift.io/vcs-uri: {{ .Values.ml.bk.vcs.uri }}
+    openshift.io/generated-by: OpenShiftWebConsole
+spec:
+  type: {{ .Values.ml.bk.svc.type }}
+  selector:
+    app: {{ include "ml.fullname" . }}-bk
+    deployment: {{ include "ml.fullname" . }}-bk
+  {{- include "ml-bk.selectorLabels" . | nindent 4 }}
+  ports:
+	{{- .Values.ml.bk.svc.ports | toYaml | nindent 2 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ml.fullname" . }}-ui
+  labels:
+    app: {{ include "ml.fullname" . }}-ui
+    app.kubernetes.io/component: {{ include "ml.fullname" . }}-ui
+    app.kubernetes.io/part-of: ml-app
+    app.openshift.io/runtime: nodejs
+    app.openshift.io/runtime-version: 16-ubi8
+  {{- include "ml.labels" . | nindent 4 }}
+  annotations:
+    app.openshift.io/vcs-ref: {{ quote .Values.ml.ui.vcs.ref }}
+    app.openshift.io/vcs-uri: {{ .Values.ml.ui.vcs.uri }}
+spec:
+  type: {{ .Values.ml.ui.svc.type }}
+  selector:
+    app: {{ include "ml.fullname" . }}-ui
+    deployment: {{ include "ml.fullname" . }}-ui
+  {{- include "ml-ui.selectorLabels" . | nindent 4 }}
+  ports:
+	{{- .Values.ml.ui.svc.ports | toYaml | nindent 2 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ml.fullname" . }}-bk
+  labels:
+    app: {{ include "ml.fullname" . }}-bk
+    app.kubernetes.io/component: {{ include "ml.fullname" . }}-bk
+    app.kubernetes.io/part-of: {{ include "ml.fullname" . }}-app
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: 3.11-ubi8
+  {{- include "ml.labels" . | nindent 4 }}
+  annotations:
+    alpha.image.policy.openshift.io/resolve-names: '*'
+    app.openshift.io/route-disabled: "false"
+    app.openshift.io/vcs-ref: {{ quote .Values.ml.bk.vcs.ref }}
+    app.openshift.io/vcs-uri: {{ .Values.ml.bk.vcs.uri }}
+    image.openshift.io/triggers: >-
+      [{"from":{"kind":"ImageStreamTag","name":"{{ include "ml.fullname" . }}-bk:{{ .Values.ml.bk.image.tag | default .Chart.AppVersion }}"},"fieldPath":"spec.template.spec.containers[?(@.name==\"{{ include "ml.fullname" . }}-bk\")].image","pause":"false"}]
+spec:
+  replicas: {{ .Values.ml.bk.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "ml.fullname" . }}-bk
+    {{- include "ml-bk.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "ml.fullname" . }}-bk
+        deployment: {{ include "ml.fullname" . }}-bk
+      {{- include "ml-bk.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - env:
+        - name: MODEL_PATH
+          value: {{ quote .Values.ml.bk.env.modelPath }}
+        image: {{ .Values.repository }}/{{ .Values.organization }}/{{ include "ml.fullname" . }}-bk:{{ .Values.ml.ui.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.ml.bk.imagePullPolicy }}
+        name: {{ include "ml.fullname" . }}-bk
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources: {}
+        volumeMounts:
+        - mountPath: /models
+          name: ml-models-volume
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      volumes:
+      - name: ml-models-volume
+        secret:
+          defaultMode: 420
+          secretName: ml-models
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ml.fullname" . }}-ui
+  labels:
+    app: {{ include "ml.fullname" . }}-ui
+    app.kubernetes.io/component: {{ include "ml.fullname" . }}-ui
+    app.kubernetes.io/part-of: ml-app
+    app.openshift.io/runtime: nodejs
+    app.openshift.io/runtime-version: 18-ubi8
+  {{- include "ml.labels" . | nindent 4 }}
+  annotations:
+    app.openshift.io/connects-to: '[{"apiVersion":"apps/v1","kind":"Deployment","name":"{{ include "ml.fullname" . }}-bk"}]'
+    alpha.image.policy.openshift.io/resolve-names: '*'
+    app.openshift.io/route-disabled: "false"
+    app.openshift.io/vcs-ref: {{ quote .Values.ml.ui.vcs.ref }}
+    app.openshift.io/vcs-uri: {{ .Values.ml.ui.vcs.uri }}
+    image.openshift.io/triggers: >-
+      [{"from":{"kind":"ImageStreamTag","name":"{{ include "ml.fullname" . }}-ui:{{ .Values.ml.ui.image.tag | default .Chart.AppVersion }}"},"fieldPath":"spec.template.spec.containers[?(@.name==\"{{ include "ml.fullname" . }}-ui\")].image","pause":"false"}]
+spec:
+  replicas: {{ .Values.ml.ui.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "ml.fullname" . }}-ui
+    {{- include "ml-ui.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "ml.fullname" . }}-ui
+        deployment: {{ include "ml.fullname" . }}-ui
+      {{- include "ml-ui.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - env:
+        - name: BACKEND_URL
+          value: {{ quote .Values.ml.ui.env.backendUrl }}
+        image: {{ .Values.repository }}/{{ .Values.organization }}/{{ include "ml.fullname" . }}-ui:{{ .Values.ml.ui.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.ml.ui.imagePullPolicy }}
+        name: {{ include "ml.fullname" . }}-ui
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext: {}
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: {{ include "ml.fullname" . }}-bk
+  labels:
+    app: {{ include "ml.fullname" . }}-bk
+    app.kubernetes.io/component: {{ include "ml.fullname" . }}-bk
+    app.kubernetes.io/part-of: ml-app
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: 3.11-ubi8
+  {{- include "ml.labels" . | nindent 4 }}
+  annotations:
+    app.openshift.io/vcs-ref: {{ quote .Values.ml.bk.vcs.ref }}
+    app.openshift.io/vcs-uri: {{ .Values.ml.bk.vcs.uri }}
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: {{ include "ml.fullname" . }}-bk:latest
+  source:
+    contextDir: /
+    git:
+      uri: {{ .Values.ml.bk.vcs.uri }}
+      ref: {{ quote .Values.ml.bk.vcs.ref }}
+    type: Git
+  strategy:
+    dockerStrategy:
+      dockerfilePath: Containerfile
+    type: Docker
+  triggers:
+  - generic:
+      secretReference:
+        name: {{ include "ml.fullname" . }}-bk-generic-webhook-secret
+    type: Generic
+  - github:
+      secretReference:
+        name: {{ include "ml.fullname" . }}-bk-github-webhook-secret
+    type: GitHub
+  - type: ConfigChange
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: {{ include "ml.fullname" . }}-bk-generic-webhook-secret
+stringData:
+  WebHookSecretKey: {{ quote .Values.webHookSecretKey }}
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: {{ include "ml.fullname" . }}-bk-github-webhook-secret
+stringData:
+  WebHookSecretKey: {{ quote .Values.webHookSecretKey }}
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: {{ include "ml.fullname" . }}-ui
+  labels:
+    app: {{ include "ml.fullname" . }}-ui
+    app.kubernetes.io/component: {{ include "ml.fullname" . }}-ui
+    app.kubernetes.io/part-of: ml-app
+    app.openshift.io/runtime: nodejs
+    app.openshift.io/runtime-version: 18-ubi8
+  {{- include "ml.labels" . | nindent 4 }}
+  annotations:
+    app.openshift.io/vcs-uri: {{ .Values.ml.ui.vcs.uri }}
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: {{ include "ml.fullname" . }}-ui:latest
+  source:
+    contextDir: /
+    git:
+      uri: {{ .Values.ml.ui.vcs.uri }}
+      ref: {{ quote .Values.ml.ui.vcs.ref }}
+    type: Git
+  strategy:
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        name: nodejs-18:latest
+        # namespace: openshift
+    type: Source
+  triggers:
+  - type: ConfigChange
+  - imageChange: {}
+    type: ImageChange
+  - generic:
+      secretReference:
+        name: {{ include "ml.fullname" . }}-ui-generic-webhook-secret
+    type: Generic
+  - github:
+      secretReference:
+        name: {{ include "ml.fullname" . }}-ui-github-webhook-secret
+    type: GitHub
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: {{ include "ml.fullname" . }}-ui-generic-webhook-secret
+stringData:
+  WebHookSecretKey: {{ quote .Values.webHookSecretKey }}
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: {{ include "ml.fullname" . }}-ui-github-webhook-secret
+stringData:
+  WebHookSecretKey: {{ quote .Values.webHookSecretKey }}
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: {{ include "ml.fullname" . }}-bk
+  labels:
+    app: {{ include "ml.fullname" . }}-bk
+    app.kubernetes.io/component: {{ include "ml.fullname" . }}-bk
+    app.kubernetes.io/part-of: ml-app
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: 3.11-ubi8
+  {{- include "ml.labels" . | nindent 4 }}
+  annotations:
+    app.openshift.io/vcs-ref: {{ quote .Values.ml.bk.vcs.ref }}
+    app.openshift.io/vcs-uri: {{ .Values.ml.bk.vcs.uri }}
+    openshift.io/generated-by: OpenShiftWebConsole
+spec:
+  lookupPolicy:
+    local: false
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: {{ include "ml.fullname" . }}-ui
+  labels:
+    app: {{ include "ml.fullname" . }}-ui
+    app.kubernetes.io/component: {{ include "ml.fullname" . }}-ui
+    app.kubernetes.io/part-of: ml-app
+    app.openshift.io/runtime: nodejs
+    app.openshift.io/runtime-version: 18-ubi8
+  {{- include "ml.labels" . | nindent 4 }}
+  annotations:
+    app.openshift.io/vcs-ref: {{ quote .Values.ml.ui.vcs.ref }}
+    app.openshift.io/vcs-uri: {{ .Values.ml.ui.vcs.uri }}
+    openshift.io/generated-by: OpenShiftWebConsole
+spec:
+  lookupPolicy:
+    local: false
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ include "ml.fullname" . }}-bk
+  labels:
+    app: {{ include "ml.fullname" . }}-bk
+    app.kubernetes.io/component: {{ include "ml.fullname" . }}-bk
+    app.kubernetes.io/part-of: ml-app
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: 3.11-ubi8
+  {{- include "ml.labels" . | nindent 4 }}
+spec:
+  port:
+    targetPort: http
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  to:
+    kind: Service
+    name: {{ include "ml.fullname" . }}-bk
+    weight: 100
+  wildcardPolicy: None
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ include "ml.fullname" . }}-ui
+  labels:
+    app: {{ include "ml.fullname" . }}-ui
+    app.kubernetes.io/component: {{ include "ml.fullname" . }}-ui
+    app.kubernetes.io/part-of: ml-app
+    app.openshift.io/runtime: nodejs
+    app.openshift.io/runtime-version: 16-ubi8
+  {{- include "ml.labels" . | nindent 4 }}
+spec:
+  port:
+    targetPort: 8080-tcp
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  to:
+    kind: Service
+    name: {{ include "ml.fullname" . }}-ui
+    weight: 100
+  wildcardPolicy: None

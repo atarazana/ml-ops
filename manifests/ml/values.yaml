@@ -1,0 +1,41 @@
+repository: "image-registry.openshift-image-registry.svc:5000"
+organization: ml-test
+useCustomNodeIs: true
+nodejsBuilderImage: registry.access.redhat.com/ubi8/nodejs-18:1-71.1698060565
+
+ml:
+  bk:
+    vcs:
+      uri: https://github.com/atarazana/ml-bk
+      ref: ''
+    replicas: 1
+    env:
+      modelPath: /models/model.joblib
+    image:
+      tag: latest
+    imagePullPolicy: Always
+    svc:
+      type: ClusterIP
+      ports:
+      - name: http
+        port: 8080
+        protocol: TCP
+        targetPort: 8080
+  ui:
+    vcs: 
+      uri: https://github.com/atarazana/ml-ui
+      ref: ''
+    replicas: 1
+    env:
+      backendUrl: http://ml-bk:8080
+    image:
+      tag: latest
+    imagePullPolicy: Always
+    svc:
+      type: ClusterIP
+      ports:
+      - name: 8080-tcp
+        port: 8080
+        protocol: TCP
+        targetPort: 8080
+    

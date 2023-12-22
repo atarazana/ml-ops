@@ -1,0 +1,30 @@
+kind: ImageStream
+apiVersion: image.openshift.io/v1
+metadata:
+  name: nodejs-18
+spec:
+  lookupPolicy:
+    local: false
+  tags:
+    - name: latest
+      annotations:
+        description: >-
+          Build and run Node.js 18 applications on UBI 8. For more information
+          about using this builder image, including OpenShift considerations,
+          see
+          https://github.com/sclorg/s2i-nodejs-container/blob/master/18-minimal/README.md.
+        iconClass: icon-nodejs
+        openshift.io/display-name: Node.js 18 (UBI 8)
+        openshift.io/provider-display-name: 'Red Hat, Inc.'
+        sampleRepo: 'https://github.com/sclorg/nodejs-ex.git'
+        tags: 'builder,nodejs'
+        version: '18'
+      from:
+        kind: DockerImage
+        name: {{ quote .Values.nodejsBuilderImage }}
+      generation: 1
+      importPolicy:
+        importMode: Legacy
+      referencePolicy:
+        type: Source
+    

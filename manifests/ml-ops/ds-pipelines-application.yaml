@@ -1,0 +1,324 @@
+---
+apiVersion: datasciencepipelinesapplications.opendatahub.io/v1alpha1
+kind: DataSciencePipelinesApplication
+metadata:
+  name: pipelines-definition
+spec:
+  apiServer:
+    stripEOF: true
+    dbConfigConMaxLifetimeSec: 120
+    applyTektonCustomResource: true
+    deploy: true
+    enableSamplePipeline: false
+    autoUpdatePipelineDefaultVersion: true
+    archiveLogs: false
+    terminateStatus: Cancelled
+    enableOauth: true
+    trackArtifacts: true
+    collectMetrics: true
+    injectDefaultScript: true
+  database:
+    disableHealthCheck: false
+    mariaDB:
+      deploy: true
+      pipelineDBName: mlpipeline
+      pvcSize: 10Gi
+      username: mlpipeline
+  mlmd:
+    deploy: false
+  objectStorage:
+    disableHealthCheck: false
+    externalStorage:
+      bucket: data-science-pipelines
+      host: 'minio-service.minio.svc:9000'
+      port: ''
+      s3CredentialsSecret:
+        accessKey: AWS_ACCESS_KEY_ID
+        secretKey: AWS_SECRET_ACCESS_KEY
+        secretName: aws-connection-data-science-pipelines
+      scheme: http
+  persistenceAgent:
+    deploy: true
+    numWorkers: 2
+  scheduledWorkflow:
+    cronScheduleTimezone: UTC
+    deploy: true
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: aws-connection-data-science-pipelines
+  labels:
+    opendatahub.io/dashboard: 'true'
+    opendatahub.io/managed: 'true'
+  annotations:
+    opendatahub.io/connection-type: s3
+    openshift.io/display-name: data-science-pipelines
+type: Opaque
+stringData:
+  AWS_ACCESS_KEY_ID: mino
+  AWS_SECRET_ACCESS_KEY: minio123
+  AWS_DEFAULT_REGION: ''
+  AWS_S3_BUCKET: data-science-pipelines
+  AWS_S3_ENDPOINT: http://minio-service.minio:9000
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: aws-connection-fraud-detection
+  labels:
+    opendatahub.io/dashboard: 'true'
+    opendatahub.io/managed: 'true'
+  annotations:
+    opendatahub.io/connection-type: s3
+    openshift.io/display-name: fraud-detection
+type: Opaque
+stringData:
+  AWS_ACCESS_KEY_ID: mino
+  AWS_SECRET_ACCESS_KEY: minio123
+  AWS_DEFAULT_REGION: ''
+  AWS_S3_BUCKET: fraud-detection
+  AWS_S3_ENDPOINT: http://minio-service.minio:9000
+---
+kind: PersistentVolumeClaim
+metadata:
+  name: ml-ops-workbench
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: PersistentVolumeClaim
+metadata:
+  name: offline-scoring-data-volume
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: kubeflow.org/v1
+kind: Notebook
+metadata:
+  annotations:
+    notebooks.opendatahub.io/inject-oauth: 'true'
+    notebooks.opendatahub.io/last-image-selection: 'custom-fraud-detection-workbench:fraud-detection-v1.0.1'
+    notebooks.opendatahub.io/last-size-selection: Small
+    notebooks.opendatahub.io/oauth-logout-url: >-
+      https://rhods-dashboard-redhat-ods-applications.apps.daedalus.sandbox242.opentlc.com/projects/pipelines-example?notebookLogout=fraud-detection-workbench
+    opendatahub.io/accelerator-name: ''
+    opendatahub.io/username: user1
+    openshift.io/description: ''
+    openshift.io/display-name: fraud-detection-workbench
+  resourceVersion: '4401296'
+  name: fraud-detection-workbench
+  uid: 231fe818-304d-4327-9f7d-379052f10f91
+  creationTimestamp: '2023-12-11T20:02:20Z'
+  generation: 1
+  managedFields:
+    - apiVersion: kubeflow.org/v1
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:metadata':
+          'f:annotations':
+            'f:notebooks.opendatahub.io/last-size-selection': {}
+            'f:notebooks.opendatahub.io/inject-oauth': {}
+            .: {}
+            'f:notebooks.opendatahub.io/oauth-logout-url': {}
+            'f:opendatahub.io/accelerator-name': {}
+            'f:notebooks.opendatahub.io/last-image-selection': {}
+            'f:openshift.io/display-name': {}
+            'f:openshift.io/description': {}
+            'f:opendatahub.io/username': {}
+          'f:labels':
+            .: {}
+            'f:app': {}
+            'f:opendatahub.io/dashboard': {}
+            'f:opendatahub.io/odh-managed': {}
+            'f:opendatahub.io/user': {}
+        'f:spec':
+          .: {}
+          'f:template':
+            .: {}
+            'f:spec':
+              .: {}
+              'f:affinity': {}
+              'f:containers': {}
+              'f:enableServiceLinks': {}
+              'f:tolerations': {}
+              'f:volumes': {}
+      manager: unknown
+      operation: Update
+      time: '2023-12-11T20:02:20Z'
+    - apiVersion: kubeflow.org/v1beta1
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:status':
+          .: {}
+          'f:conditions': {}
+          'f:containerState':
+            .: {}
+            'f:running':
+              .: {}
+              'f:startedAt': {}
+          'f:readyReplicas': {}
+      manager: manager
+      operation: Update
+      subresource: status
+      time: '2023-12-13T09:30:37Z'
+  namespace: pipelines-example
+  labels:
+    app: fraud-detection-workbench
+    opendatahub.io/dashboard: 'true'
+    opendatahub.io/odh-managed: 'true'
+    opendatahub.io/user: user1
+spec:
+  template:
+    spec:
+      affinity: {}
+      containers:
+        - resources:
+            limits:
+              cpu: '2'
+              memory: 8Gi
+            requests:
+              cpu: '1'
+              memory: 8Gi
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /notebook/pipelines-example/fraud-detection-workbench/api
+              port: notebook-port
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: fraud-detection-workbench
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /notebook/pipelines-example/fraud-detection-workbench/api
+              port: notebook-port
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          env:
+            - name: NOTEBOOK_ARGS
+              value: |-
+                --ServerApp.port=8888
+                                  --ServerApp.token=''
+                                  --ServerApp.password=''
+                                  --ServerApp.base_url=/notebook/pipelines-example/fraud-detection-workbench
+                                  --ServerApp.quit_button=False
+                                  --ServerApp.tornado_settings={"user":"user1","hub_host":"https://rhods-dashboard-redhat-ods-applications.apps.daedalus.sandbox242.opentlc.com","hub_prefix":"/projects/pipelines-example"}
+            - name: JUPYTER_IMAGE
+              value: >-
+                image-registry.openshift-image-registry.svc:5000/redhat-ods-applications/custom-fraud-detection-workbench:fraud-detection-v1.0.1
+          ports:
+            - containerPort: 8888
+              name: notebook-port
+              protocol: TCP
+          imagePullPolicy: Always
+          volumeMounts:
+            - mountPath: /opt/app-root/src
+              name: fraud-detection-workbench
+            - mountPath: /opt/app-root/runtimes
+              name: elyra-dsp-details
+            - mountPath: /dev/shm
+              name: shm
+          envFrom:
+            - secretRef:
+                name: aws-connection-fraud-detection
+          image: >-
+            image-registry.openshift-image-registry.svc:5000/redhat-ods-applications/custom-fraud-detection-workbench:fraud-detection-v1.0.1
+          workingDir: /opt/app-root/src
+        - resources:
+            limits:
+              cpu: 100m
+              memory: 64Mi
+            requests:
+              cpu: 100m
+              memory: 64Mi
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /oauth/healthz
+              port: oauth-proxy
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: oauth-proxy
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /oauth/healthz
+              port: oauth-proxy
+              scheme: HTTPS
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          ports:
+            - containerPort: 8443
+              name: oauth-proxy
+              protocol: TCP
+          imagePullPolicy: Always
+          volumeMounts:
+            - mountPath: /etc/oauth/config
+              name: oauth-config
+            - mountPath: /etc/tls/private
+              name: tls-certificates
+          image: >-
+            registry.redhat.io/openshift4/ose-oauth-proxy@sha256:4bef31eb993feb6f1096b51b4876c65a6fb1f4401fee97fa4f4542b6b7c9bc46
+          args:
+            - '--provider=openshift'
+            - '--https-address=:8443'
+            - '--http-address='
+            - '--openshift-service-account=fraud-detection-workbench'
+            - '--cookie-secret-file=/etc/oauth/config/cookie_secret'
+            - '--cookie-expire=24h0m0s'
+            - '--tls-cert=/etc/tls/private/tls.crt'
+            - '--tls-key=/etc/tls/private/tls.key'
+            - '--upstream=http://localhost:8888'
+            - '--upstream-ca=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'
+            - '--email-domain=*'
+            - '--skip-provider-button'
+            - >-
+              --openshift-sar={"verb":"get","resource":"notebooks","resourceAPIGroup":"kubeflow.org","resourceName":"fraud-detection-workbench","namespace":"$(NAMESPACE)"}
+            - >-
+              --logout-url=https://rhods-dashboard-redhat-ods-applications.apps.daedalus.sandbox242.opentlc.com/projects/pipelines-example?notebookLogout=fraud-detection-workbench
+      enableServiceLinks: false
+      serviceAccountName: fraud-detection-workbench
+      volumes:
+        - name: fraud-detection-workbench
+          persistentVolumeClaim:
+            claimName: fraud-detection-workbench
+        - name: elyra-dsp-details
+          secret:
+            secretName: ds-pipeline-config
+        - emptyDir:
+            medium: Memory
+          name: shm
+        - name: oauth-config
+          secret:
+            defaultMode: 420
+            secretName: fraud-detection-workbench-oauth-config
+        - name: tls-certificates
+          secret:
+            defaultMode: 420
+            secretName: fraud-detection-workbench-tls
