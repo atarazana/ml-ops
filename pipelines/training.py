@@ -57,4 +57,4 @@ def train(
 
 
 if __name__ == '__main__':
-    train(data_folder=DEFAULT_DATA_FOLDER)
+    train(data_folder='/data')

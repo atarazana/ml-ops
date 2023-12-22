@@ -34,5 +34,5 @@ def upload_model(
 
 if __name__ == '__main__':
     upload_model(
-        data_folder=DEFAULT_DATA_FOLDER,
+        data_folder='/data',
         model_file_name=DEFAULT_MODEL_FILE_NAME)
