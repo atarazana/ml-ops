@@ -1,3 +1,5 @@
+from os import environ
+
 import numpy as np
 
 from numpy import save
@@ -14,9 +16,9 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LinearRegression
 
-DEFAULT_DATA_OBJECT_NAME = 'live-data.csv'
+DEFAULT_DATA_OBJECT_NAME = 'data-sets/live-data.csv'
 
-DEFAULT_DATA_FOLDER = './data'
+DEFAULT_DATA_FOLDER = '/data'
 DEFAULT_DATA_FILE_NAME = 'data.csv'
 
 DEFAULT_TRAIN_DATA_FILE_NAME = 'train-data.pkl'
@@ -27,7 +29,7 @@ DEFAULT_TEST_LABELS_FILE = 'test-labels.pkl'
 
 DEFAULT_MODEL_FILE_NAME = 'model.joblib'
 
-def preprocess(data_folder=DEFAULT_DATA_FOLDER,data_file=DEFAULT_DATA_FILE_NAME):
+def preprocess(data_folder=f'{environ.get("HOME")}/data', data_file=DEFAULT_DATA_FILE_NAME):
     print('>>> Preprocessing data')
 
     data = read_csv(f'{data_folder}/{data_file}')
@@ -78,4 +80,4 @@ def preprocess(data_folder=DEFAULT_DATA_FOLDER,data_file=DEFAULT_DATA_FILE_NAME)
 
 
 if __name__ == '__main__':
-    preprocess(data_folder='/data')
+    preprocess(data_folder=DEFAULT_DATA_FOLDER)
