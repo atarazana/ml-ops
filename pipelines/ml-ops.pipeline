@@ -42,7 +42,7 @@
             "label": "",
             "ui_data": {
               "label": "data_ingestion.py",
-              "image": "/notebook/ml-ops/ml-ops/static/elyra/python.svg",
+              "image": "/notebook/mlops/ml-ops/static/elyra/python.svg",
               "x_pos": 70,
               "y_pos": 50,
               "description": "Run Python script"
@@ -107,7 +107,7 @@
             "label": "",
             "ui_data": {
               "label": "preprocessing.py",
-              "image": "/notebook/ml-ops/ml-ops/static/elyra/python.svg",
+              "image": "/notebook/mlops/ml-ops/static/elyra/python.svg",
               "x_pos": 290,
               "y_pos": 50,
               "description": "Run Python script"
@@ -178,7 +178,7 @@
             "label": "",
             "ui_data": {
               "label": "training.py",
-              "image": "/notebook/ml-ops/ml-ops/static/elyra/python.svg",
+              "image": "/notebook/mlops/ml-ops/static/elyra/python.svg",
               "x_pos": 530,
               "y_pos": 50,
               "description": "Run Python script"
@@ -247,7 +247,7 @@
             "label": "",
             "ui_data": {
               "label": "model_upload.py",
-              "image": "/notebook/ml-ops/ml-ops/static/elyra/python.svg",
+              "image": "/notebook/mlops/ml-ops/static/elyra/python.svg",
               "x_pos": 770,
               "y_pos": 50,
               "description": "Run Python script"

@@ -56,7 +56,7 @@ rooms_ix, bedrooms_ix, population_ix, households_ix = 3, 4, 5, 6
 #         def shape_calculator(operator):
 #             operator.outputs[0].type = operator.inputs[0].type
 #         return shape_calculator
-        
+
 def train(
         data_folder=f'{environ.get("HOME")}/data',
         train_data_file_name=DEFAULT_TRAIN_DATA_FILE_NAME, 
